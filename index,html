@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upcoming Deadlines</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: transparent; /* Cream/Ivory background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        font-family: "Inter", sans-serif;
+        color: #4a4a4a; /* Slate Gray for text */
+      }
+      .widget-container {
+        width: 100%;
+        max-width: 320px;
+        background: #fdf6f0; /* Cream/Ivory main background */
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        border: 1px solid rgba(74, 74, 74, 0.1);
+      }
+      .widget-header {
+        background: #4a4a4a; /* Slate Gray for header */
+        color: white;
+        padding: 18px 16px;
+        text-align: center;
+      }
+      .widget-header h1 {
+        font-family: "Playfair Display", serif;
+        font-size: 1.3rem;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      .widget-content {
+        padding: 20px 16px;
+      }
+      .section-title {
+        font-family: "Playfair Display", serif;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #4a4a4a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .section-title i {
+        color: #a3b18a;
+        font-size: 0.9rem;
+      }
+      .upcoming-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .upcoming-item {
+        background: white;
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid rgba(74, 74, 74, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+      }
+      .upcoming-item:hover {
+        border-color: #a3b18a;
+        box-shadow: 0 3px 8px rgba(163, 177, 138, 0.15);
+      }
+      .upcoming-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .upcoming-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f0e6d2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #4a4a4a;
+        font-size: 0.9rem;
+      }
+      .upcoming-details {
+        flex: 1;
+      }
+      .upcoming-title {
+        font-weight: 500;
+        font-size: 0.85rem;
+        color: #4a4a4a;
+        margin-bottom: 2px;
+      }
+      .upcoming-date {
+        font-size: 0.75rem;
+        color: #4a4a4a;
+        opacity: 0.7;
+      }
+      .upcoming-days {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #a3b18a;
+        background: #f0e6d2;
+        padding: 4px 8px;
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="widget-container">
+      <div class="widget-header">
+        <h1>Upcoming Deadlines</h1>
+      </div>
+      <div class="widget-content">
+        <div class="section">
+          <div class="section-title">
+            <i class="fas fa-clock"></i> Next Deadlines
+          </div>
+          <div class="upcoming-list" id="upcomingList">
+            <!-- Upcoming items will be dynamically added here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Function to load assignments from localStorage
+        function loadAssignments() {
+          return JSON.parse(localStorage.getItem("assignments")) || [];
+        }
+        
+        // Function to calculate days until due date
+        function calculateDaysUntilDue(dueDate) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const due = new Date(dueDate);
+          due.setHours(0, 0, 0, 0);
+          const diffTime = due - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        }
+        
+        // Function to update upcoming deadlines widget
+        function updateDeadlinesWidget() {
+          const assignments = loadAssignments();
+          const upcomingList = document.getElementById("upcomingList");
+          upcomingList.innerHTML = "";
+          
+          // Filter assignments that are not completed and sort by due date
+          const upcomingAssignments = assignments
+            .filter((a) => a.progress < 100)
+            .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+            .slice(0, 3); // Show only the next 3
+          
+          if (upcomingAssignments.length === 0) {
+            upcomingList.innerHTML =
+              '<div style="text-align: center; padding: 10px; color: #4A4A4A; opacity: 0.7;">No upcoming deadlines</div>';
+            return;
+          }
+          
+          upcomingAssignments.forEach((assignment) => {
+            const daysUntilDue = calculateDaysUntilDue(assignment.dueDate);
+            const formattedDate = new Date(
+              assignment.dueDate
+            ).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+            const daysText =
+              daysUntilDue === 0
+                ? "Today"
+                : daysUntilDue === 1
+                ? "Tomorrow"
+                : daysUntilDue < 0
+                ? "Overdue"
+                : `${daysUntilDue} days`;
+            
+            const item = document.createElement("div");
+            item.className = "upcoming-item";
+            item.innerHTML = `
+              <div class="upcoming-info">
+                <div class="upcoming-icon">
+                  <i class="fas ${
+                    assignment.type === "exam"
+                      ? "fa-graduation-cap"
+                      : "fa-book"
+                  }"></i>
+                </div>
+                <div class="upcoming-details">
+                  <div class="upcoming-title">${assignment.name}</div>
+                  <div class="upcoming-date">${formattedDate}</div>
+                </div>
+              </div>
+              <div class="upcoming-days">${daysText}</div>
+            `;
+            upcomingList.appendChild(item);
+          });
+        }
+        
+        // Listen for storage changes to update the widget
+        window.addEventListener("storage", function (e) {
+          if (e.key === "assignments") {
+            updateDeadlinesWidget();
+          }
+        });
+        
+        // Also listen for custom storage events dispatched from the same window
+        window.addEventListener("storage", function (e) {
+          updateDeadlinesWidget();
+        });
+        
+        // Initial update
+        updateDeadlinesWidget();
+      });
+    </script>
+  </body>
+</html>
